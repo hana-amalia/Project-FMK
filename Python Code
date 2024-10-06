@@ -3,23 +3,23 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.signal import savgol_filter
 
-# Fungsi untuk integrasi numerik menggunakan metode trapezoidal (cumsum)
+# integrasi numerik trapezoidal
 def integrate(data, delta_t):
     return np.cumsum(data * delta_t)
 
 def main(file_path, massa_total=48.194):
-    # Membaca file CSV
+    # read csv
     data = pd.read_csv(file_path)
     
-    # Data percepatan dan waktu dari file CSV
+    # percepatan dan waktu
     time = data['time']  # Waktu dalam detik
     accel_y = data['ay']  # Akselerasi pada sumbu y
     accel_total = data['atotal']  # Akselerasi total
     
-    # Menghitung delta_t
+    # perbedaan waktu
     delta_t = time.diff().fillna(0).mean()  # Rata-rata interval waktu (detik)
     
-    # Smoothing data akselerasi menggunakan filter Savitzky-Golay
+    # Smoothing data percepatan dengan filter Savitzky-Golay
     window_length = 11  # Panjang window harus ganjil
     polyorder = 2
     
@@ -30,25 +30,25 @@ def main(file_path, massa_total=48.194):
     corrected_accel_y = smoothed_accel_y - smoothed_accel_y.mean()
     corrected_accel_total = smoothed_accel_total - smoothed_accel_total.mean()
     
-    # Menghitung kecepatan (integrasi dari percepatan y)
+    # Menghitung kecepatan  sumbu y
     velocity_y = integrate(corrected_accel_y, delta_t)
     
-    # Menghitung perpindahan (integrasi dari kecepatan y)
+    # Menghitung perpindahan sumbu y
     displacement_y = integrate(velocity_y, delta_t)
     
-    # Menghitung gaya total (F = m * a_total)
+    # Menghitung gaya total
     force_total = massa_total * corrected_accel_total
     
-    # Menghitung usaha (Usaha = Gaya Total * Perpindahan Y)
+    # Menghitung usaha
     work_total = force_total * displacement_y
     
-    # Menghitung energi kinetik (KE = 1/2 * m * v_y^2)
+    # Menghitung energi kinetik
     kinetic_energy = 0.5 * massa_total * velocity_y**2
     
     # Plotting hasil
     plt.figure(figsize=(15, 20))
 
-    # Plot akselerasi pada sumbu y
+    # Plot percepatan pada sumbu y
     plt.subplot(6, 1, 1)
     plt.plot(time, corrected_accel_y, label='Corrected Akselerasi Y')
     plt.title('Akselerasi Y (Corrected) vs Waktu')
@@ -72,7 +72,7 @@ def main(file_path, massa_total=48.194):
     plt.ylabel('Perpindahan (meter)')
     plt.legend()
     
-    # Plot gaya total menggunakan akselerasi total
+    # Plot gaya total dengan akselerasi total
     plt.subplot(6, 1, 4)
     plt.plot(time, force_total, label='Gaya Total', color='blue')
     plt.title('Gaya Total vs Waktu')
