@@ -1,0 +1,105 @@
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy.signal import savgol_filter
+
+# Fungsi untuk integrasi numerik menggunakan metode trapezoidal (cumsum)
+def integrate(data, delta_t):
+    return np.cumsum(data * delta_t)
+
+def main(file_path, massa_total=48.194):
+    # Membaca file CSV
+    data = pd.read_csv(file_path)
+    
+    # Data percepatan dan waktu dari file CSV
+    time = data['time']  # Waktu dalam detik
+    accel_y = data['ay']  # Akselerasi pada sumbu y
+    accel_total = data['atotal']  # Akselerasi total
+    
+    # Menghitung delta_t
+    delta_t = time.diff().fillna(0).mean()  # Rata-rata interval waktu (detik)
+    
+    # Smoothing data akselerasi menggunakan filter Savitzky-Golay
+    window_length = 11  # Panjang window harus ganjil
+    polyorder = 2
+    
+    smoothed_accel_y = savgol_filter(accel_y, window_length, polyorder)
+    smoothed_accel_total = savgol_filter(accel_total, window_length, polyorder)
+    
+    # Koreksi drift pada data akselerasi
+    corrected_accel_y = smoothed_accel_y - smoothed_accel_y.mean()
+    corrected_accel_total = smoothed_accel_total - smoothed_accel_total.mean()
+    
+    # Menghitung kecepatan (integrasi dari percepatan y)
+    velocity_y = integrate(corrected_accel_y, delta_t)
+    
+    # Menghitung perpindahan (integrasi dari kecepatan y)
+    displacement_y = integrate(velocity_y, delta_t)
+    
+    # Menghitung gaya total (F = m * a_total)
+    force_total = massa_total * corrected_accel_total
+    
+    # Menghitung usaha (Usaha = Gaya Total * Perpindahan Y)
+    work_total = force_total * displacement_y
+    
+    # Menghitung energi kinetik (KE = 1/2 * m * v_y^2)
+    kinetic_energy = 0.5 * massa_total * velocity_y**2
+    
+    # Plotting hasil
+    plt.figure(figsize=(15, 20))
+
+    # Plot akselerasi pada sumbu y
+    plt.subplot(6, 1, 1)
+    plt.plot(time, corrected_accel_y, label='Corrected Akselerasi Y')
+    plt.title('Akselerasi Y (Corrected) vs Waktu')
+    plt.xlabel('Waktu (detik)')
+    plt.ylabel('Akselerasi (m/s²)')
+    plt.legend()
+    
+    # Plot kecepatan pada sumbu y
+    plt.subplot(6, 1, 2)
+    plt.plot(time, velocity_y, label='Kecepatan Y', color='orange')
+    plt.title('Kecepatan Y vs Waktu')
+    plt.xlabel('Waktu (detik)')
+    plt.ylabel('Kecepatan (m/s)')
+    plt.legend()
+    
+    # Plot perpindahan pada sumbu y
+    plt.subplot(6, 1, 3)
+    plt.plot(time, displacement_y, label='Perpindahan Y', color='green')
+    plt.title('Perpindahan Y vs Waktu')
+    plt.xlabel('Waktu (detik)')
+    plt.ylabel('Perpindahan (meter)')
+    plt.legend()
+    
+    # Plot gaya total menggunakan akselerasi total
+    plt.subplot(6, 1, 4)
+    plt.plot(time, force_total, label='Gaya Total', color='blue')
+    plt.title('Gaya Total vs Waktu')
+    plt.xlabel('Waktu (detik)')
+    plt.ylabel('Gaya (Newton)')
+    plt.legend()
+    
+    # Plot usaha total
+    plt.subplot(6, 1, 5)
+    plt.plot(time, work_total, label='Usaha Total', color='green')
+    plt.title('Usaha Total vs Waktu')
+    plt.xlabel('Waktu (detik)')
+    plt.ylabel('Usaha (Joule)')
+    plt.legend()
+    
+    # Plot energi kinetik
+    plt.subplot(6, 1, 6)
+    plt.plot(time, kinetic_energy, label='Energi Kinetik', color='red')
+    plt.title('Energi Kinetik vs Waktu')
+    plt.xlabel('Waktu (detik)')
+    plt.ylabel('Energi Kinetik (Joule)')
+    plt.legend()
+
+    # Menampilkan grafik
+    plt.tight_layout()
+    plt.show()
+
+# Jalankan program dengan memasukkan path file CSV
+file_path = '/Users/hanaamalia/Downloads/jalan 7.2 meter (2).csv'  # Ganti dengan path file CSV Anda
+main(file_path)
