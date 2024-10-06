@@ -96,10 +96,10 @@ def main(file_path, massa_total=48.194):
     plt.ylabel('Energi Kinetik (Joule)')
     plt.legend()
 
-    # Menampilkan grafik
+    # show graph
     plt.tight_layout()
     plt.show()
 
-# Jalankan program dengan memasukkan path file CSV
-file_path = '/Users/hanaamalia/Downloads/jalan 7.2 meter (2).csv'  # Ganti dengan path file CSV Anda
+# run with csv
+file_path = '/Users/hanaamalia/Downloads/jalan 7.2 meter (2).csv'  # insert csv
 main(file_path)
